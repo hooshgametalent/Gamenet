@@ -1,0 +1,27 @@
+# Gradle and Kotlin
+.gradle/
+.gradle-user/
+.kotlin/
+build/
+app/build/
+*/build/
+
+# Local environment
+local.properties
+android-sdk/
+.android/
+
+# Signing keys
+*.keystore
+*.jks
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+captures/
+.cxx/
+
+# APKs (keep the published release at repo root)
+*.apk
+!/GameNetMehdi.apk
