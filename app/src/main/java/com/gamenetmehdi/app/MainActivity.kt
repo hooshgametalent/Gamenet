@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,11 +21,17 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,6 +63,10 @@ const val APP_NAME = "استعداد بازی"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         setContent {
             VenueApp(golbargVenue)
@@ -73,11 +85,18 @@ private fun VenueApp(venue: Venue) {
 
 @Composable
 private fun VenueScreen(venue: Venue) {
+    val bottomInset = WindowInsets.safeDrawing
+        .only(WindowInsetsSides.Bottom)
+        .asPaddingValues()
+        .calculateBottomPadding()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(VenueColors.Slate950),
-        contentPadding = PaddingValues(bottom = 32.dp),
+            .background(VenueColors.Slate950)
+            .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            ),
+        contentPadding = PaddingValues(bottom = 32.dp + bottomInset),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { BrandBar() }
@@ -91,6 +110,7 @@ private fun VenueScreen(venue: Venue) {
             SectionTitle(
                 title = "اتاق\u200cها و دستگاه\u200cها",
                 subtitle = "نمایش دستگاه\u200cهای هر اتاق به همراه وضعیت فعالیت آن\u200cها.",
+                caption = "وضعیت دستگاه\u200cها یک تصویر لحظه\u200cای است و زنده به\u200cروزرسانی نمی\u200cشود.",
             )
         }
         items(venue.rooms) { room -> RoomCard(room) }
@@ -175,12 +195,6 @@ private fun HeroHeader(venue: Venue) {
             fontWeight = FontWeight.Black,
             fontSize = 32.sp,
         )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = venue.address,
-            color = VenueColors.Slate400,
-            fontSize = 14.sp,
-        )
         Spacer(Modifier.height(20.dp))
         Button(
             onClick = { openUri(context, "tel:${venue.phone}", Intent.ACTION_DIAL) },
@@ -255,12 +269,16 @@ private fun StatCard(label: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun SectionTitle(title: String, subtitle: String? = null) {
+private fun SectionTitle(title: String, subtitle: String? = null, caption: String? = null) {
     Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) {
         Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
         if (subtitle != null) {
             Spacer(Modifier.height(4.dp))
             Text(subtitle, color = VenueColors.Slate400, fontSize = 13.sp)
+        }
+        if (caption != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(caption, color = VenueColors.Slate400.copy(alpha = 0.8f), fontSize = 11.sp)
         }
     }
 }
