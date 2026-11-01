@@ -105,7 +105,9 @@ data class VenueFilter(
     val city: String? = null,
     val service: String? = null,
     val amenity: String? = null,
-)
+) {
+    fun selectProvince(nextProvince: String?): VenueFilter = copy(province = nextProvince, city = null)
+}
 
 enum class AuthMode(val label: String) {
     LOGIN("ورود"),

@@ -17,15 +17,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -37,19 +36,20 @@ import androidx.compose.ui.unit.sp
 import com.gamenetmehdi.app.ui.VenueColors
 import kotlin.math.ceil
 
-private enum class CatalogLayout { LIST, GRID }
-
 @Composable
 fun GamesScreen(repository: AppRepository, navigator: AppNavigator) {
-    var filter by remember { mutableStateOf(GameFilter(query = navigator.initialGameQuery)) }
-    var layout by remember { mutableStateOf(CatalogLayout.LIST) }
-    var page by remember { mutableIntStateOf(0) }
+    val filter = navigator.gameFilter
+    val layout = navigator.gameLayout
     val results = repository.games(filter)
     val pageSize = 3
     val pageCount = maxOf(1, ceil(results.size / pageSize.toDouble()).toInt())
-    if (page >= pageCount) page = pageCount - 1
+    val page = navigator.gamePage.coerceIn(0, pageCount - 1)
+    if (navigator.gamePage != page) navigator.gamePage = page
     val visibleGames = results.drop(page * pageSize).take(pageSize)
-    fun update(next: GameFilter) { filter = next; page = 0 }
+    fun update(next: GameFilter) {
+        navigator.gameFilter = next
+        navigator.gamePage = 0
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(VenueColors.Slate950),
@@ -88,8 +88,8 @@ fun GamesScreen(repository: AppRepository, navigator: AppNavigator) {
                     onSelect = { update(filter.copy(sort = it ?: GameSort.RECOMMENDED)) },
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { layout = CatalogLayout.LIST }) { Text(if (layout == CatalogLayout.LIST) "✓ فهرست" else "فهرست") }
-                    OutlinedButton(onClick = { layout = CatalogLayout.GRID }) { Text(if (layout == CatalogLayout.GRID) "✓ شبکه" else "شبکه") }
+                    OutlinedButton(onClick = { navigator.gameLayout = CatalogLayout.LIST }) { Text(if (layout == CatalogLayout.LIST) "✓ فهرست" else "فهرست") }
+                    OutlinedButton(onClick = { navigator.gameLayout = CatalogLayout.GRID }) { Text(if (layout == CatalogLayout.GRID) "✓ شبکه" else "شبکه") }
                     OutlinedButton(onClick = { update(GameFilter()) }) { Text("بازنشانی") }
                 }
             }
@@ -118,9 +118,15 @@ fun GamesScreen(repository: AppRepository, navigator: AppNavigator) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(onClick = { if (page > 0) page-- }, enabled = page > 0) { Text("قبلی") }
+                    OutlinedButton(
+                        onClick = { if (page > 0) navigator.gamePage = page - 1 },
+                        enabled = page > 0,
+                    ) { Text("قبلی") }
                     Text("صفحه ${page + 1} از $pageCount", color = VenueColors.Slate300)
-                    OutlinedButton(onClick = { if (page + 1 < pageCount) page++ }, enabled = page + 1 < pageCount) { Text("بعدی") }
+                    OutlinedButton(
+                        onClick = { if (page + 1 < pageCount) navigator.gamePage = page + 1 },
+                        enabled = page + 1 < pageCount,
+                    ) { Text("بعدی") }
                 }
             }
         }
@@ -157,6 +163,8 @@ fun GameDetailScreen(repository: AppRepository, gameId: String, navigator: AppNa
     val related = game.relatedGameIds.mapNotNull(repository::game)
     val venues = game.venueIds.mapNotNull(repository::venue)
     val context = LocalContext.current
+    val officialLink = game.officialUrl?.let(OfficialLinkPolicy::validate)
+    val pendingOfficialLink = remember(game.id) { mutableStateOf<OfficialGameLink?>(null) }
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(VenueColors.Slate950),
         contentPadding = PaddingValues(bottom = 24.dp),
@@ -203,9 +211,11 @@ fun GameDetailScreen(repository: AppRepository, gameId: String, navigator: AppNa
                 SectionHeading("درباره بازی")
                 VerticalGap()
                 Text(game.description, color = VenueColors.Slate300, lineHeight = 24.sp)
-                if (game.officialUrl != null) {
+                if (officialLink != null) {
                     VerticalGap(12)
-                    OutlinedButton(onClick = { openExternalUri(context, game.officialUrl) }) { Text("باز کردن وب‌سایت رسمی") }
+                    OutlinedButton(onClick = { pendingOfficialLink.value = officialLink }) {
+                        Text("باز کردن وب‌سایت رسمی")
+                    }
                 }
             }
         }
@@ -225,6 +235,24 @@ fun GameDetailScreen(repository: AppRepository, gameId: String, navigator: AppNa
                 }
             }
         }
+    }
+    pendingOfficialLink.value?.let { link ->
+        AlertDialog(
+            onDismissRequest = { pendingOfficialLink.value = null },
+            title = { Text("خروج از استعداد بازی") },
+            text = { Text("وب‌سایت رسمی ${link.host} در مرورگر سیستم باز می‌شود. ادامه می‌دهید؟") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingOfficialLink.value = null
+                        openOfficialGameLink(context, link)
+                    },
+                ) { Text("ادامه") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingOfficialLink.value = null }) { Text("انصراف") }
+            },
+        )
     }
 }
 

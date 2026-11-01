@@ -53,6 +53,16 @@ class InMemoryMockRepositoryTest {
     }
 
     @Test
+    fun cities_dependOnProvinceAndChangingProvinceClearsCity() {
+        assertEquals(listOf("تهران", "ری"), repository.cities("تهران"))
+        assertEquals(listOf("شیراز"), repository.cities("فارس"))
+
+        val changed = VenueFilter(province = "تهران", city = "ری").selectProvince("فارس")
+        assertEquals("فارس", changed.province)
+        assertEquals(null, changed.city)
+    }
+
+    @Test
     fun venues_returnsEmptyForImpossibleCombination() {
         val results = repository.venues(VenueFilter(province = "فارس", amenity = "اینترنت پرسرعت"))
 

@@ -19,10 +19,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -34,8 +30,8 @@ import com.gamenetmehdi.app.ui.VenueColors
 
 @Composable
 fun MapScreen(repository: AppRepository, navigator: AppNavigator) {
-    var province by remember { mutableStateOf<String?>(null) }
-    var layer by remember { mutableStateOf("ساده") }
+    val province = navigator.mapProvince
+    val layer = navigator.mapLayer
     val venues = repository.venues(VenueFilter(province = province))
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(VenueColors.Slate950),
@@ -49,12 +45,16 @@ fun MapScreen(repository: AppRepository, navigator: AppNavigator) {
                 SampleNotice("موقعیت زنده در حالت نمونه در دسترس نیست و هیچ مجوز مکانی درخواست نمی‌شود.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     repository.provinces().forEach { item ->
-                        FilterChip(selected = province == item, onClick = { province = if (province == item) null else item }, label = { Text(item) })
+                        FilterChip(
+                            selected = province == item,
+                            onClick = { navigator.mapProvince = if (province == item) null else item },
+                            label = { Text(item) },
+                        )
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("ساده", "تیره").forEach { item ->
-                        FilterChip(selected = layer == item, onClick = { layer = item }, label = { Text("لایه $item") })
+                        FilterChip(selected = layer == item, onClick = { navigator.mapLayer = item }, label = { Text("لایه $item") })
                     }
                 }
             }

@@ -16,7 +16,7 @@ interface VenuesRepository {
     fun venues(filter: VenueFilter = VenueFilter()): List<Venue>
     fun venue(id: String): Venue?
     fun provinces(): List<String>
-    fun cities(): List<String>
+    fun cities(province: String): List<String>
     fun venueServices(): List<String>
     fun amenities(): List<String>
 }
@@ -96,7 +96,11 @@ class InMemoryMockRepository : AppRepository {
 
     override fun venue(id: String): Venue? = allVenues.find { it.id == id }
     override fun provinces(): List<String> = allVenues.map { it.province }.distinct().sorted()
-    override fun cities(): List<String> = allVenues.map { it.city }.distinct().sorted()
+    override fun cities(province: String): List<String> = allVenues
+        .filter { it.province == province }
+        .map { it.city }
+        .distinct()
+        .sorted()
     override fun venueServices(): List<String> = allVenues.flatMap { it.services }.distinct().sorted()
     override fun amenities(): List<String> = allVenues.flatMap { it.amenities }.distinct().sorted()
 

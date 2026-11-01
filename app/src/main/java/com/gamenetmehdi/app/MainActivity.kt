@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -69,11 +68,7 @@ fun GameTalentApp(repository: AppRepository) {
                     }
                 },
             ) { contentPadding ->
-                Box(
-                    modifier = Modifier
-                        .padding(contentPadding)
-                        .safeDrawingPadding(),
-                ) {
+                Box(modifier = Modifier.padding(contentPadding)) {
                     AppRouteHost(repository, navigator)
                 }
             }
@@ -89,7 +84,7 @@ private fun AppRouteHost(repository: AppRepository, navigator: AppNavigator) {
             MainDestination.GAMES -> GamesScreen(repository, navigator)
             MainDestination.VENUES -> VenuesScreen(repository, navigator)
             MainDestination.MAP -> MapScreen(repository, navigator)
-            MainDestination.ACCOUNT -> AccountScreen(repository)
+            MainDestination.ACCOUNT -> AccountScreen(repository, navigator)
         }
         is AppRoute.GameDetail -> GameDetailScreen(repository, route.id, navigator)
         is AppRoute.VenueDetail -> VenueDetailScreen(repository, route.id, navigator)

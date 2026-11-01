@@ -1,6 +1,5 @@
 package com.gamenetmehdi.app
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,10 +14,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -29,9 +24,9 @@ import com.gamenetmehdi.app.ui.VenueColors
 
 @Composable
 fun VenuesScreen(repository: AppRepository, navigator: AppNavigator) {
-    var filter by remember { mutableStateOf(VenueFilter()) }
+    val filter = navigator.venueFilter
     val venues = repository.venues(filter)
-    fun update(next: VenueFilter) { filter = next }
+    fun update(next: VenueFilter) { navigator.venueFilter = next }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(VenueColors.Slate950),
@@ -52,8 +47,22 @@ fun VenuesScreen(repository: AppRepository, navigator: AppNavigator) {
         }
         item {
             Column(modifier = Modifier.fillMaxWidth().panel().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterOptions("استان", repository.provinces(), filter.province, onSelect = { update(filter.copy(province = it)) })
-                FilterOptions("شهر", repository.cities(), filter.city, onSelect = { update(filter.copy(city = it)) })
+                FilterOptions(
+                    "استان",
+                    repository.provinces(),
+                    filter.province,
+                    onSelect = { province -> update(filter.selectProvince(province)) },
+                )
+                if (filter.province == null) {
+                    Text("برای انتخاب شهر، ابتدا استان را انتخاب کنید.", color = VenueColors.Slate400, fontSize = 12.sp)
+                } else {
+                    FilterOptions(
+                        "شهر",
+                        repository.cities(filter.province),
+                        filter.city,
+                        onSelect = { update(filter.copy(city = it)) },
+                    )
+                }
                 FilterOptions("خدمت", repository.venueServices(), filter.service, onSelect = { update(filter.copy(service = it)) })
                 FilterOptions("امکانات", repository.amenities(), filter.amenity, onSelect = { update(filter.copy(amenity = it)) })
                 OutlinedButton(onClick = { update(VenueFilter()) }) { Text("پاک کردن همه فیلترها") }
@@ -94,7 +103,7 @@ fun VenueDetailScreen(repository: AppRepository, venueId: String, navigator: App
                 Text(venue.address, color = VenueColors.Slate300)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
-                        onClick = { openExternalUri(context, "tel:${venue.phone}", Intent.ACTION_DIAL) },
+                        onClick = { openDialer(context, venue.phone) },
                         modifier = Modifier.weight(1f),
                     ) { Text("تماس") }
                     OutlinedButton(onClick = { openVenueMap(context, venue) }, modifier = Modifier.weight(1f)) { Text("مسیریابی") }

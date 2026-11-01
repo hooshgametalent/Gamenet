@@ -30,15 +30,15 @@ import androidx.compose.ui.unit.sp
 import com.gamenetmehdi.app.ui.VenueColors
 
 @Composable
-fun AccountScreen(repository: AppRepository) {
-    var mode by remember { mutableStateOf(AuthMode.LOGIN) }
+fun AccountScreen(repository: AppRepository, navigator: AppNavigator) {
+    val mode = navigator.accountMode
     var input by remember { mutableStateOf(AuthInput()) }
     var validation by remember { mutableStateOf(ValidationResult(emptyMap())) }
     var passwordVisible by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
 
     fun switchMode(next: AuthMode) {
-        mode = next
+        navigator.accountMode = next
         input = AuthInput()
         validation = ValidationResult(emptyMap())
         message = null

@@ -15,10 +15,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -33,7 +29,7 @@ fun HomeScreen(repository: AppRepository, navigator: AppNavigator) {
     val venue = repository.venue(content.featuredVenueId)
     val services = content.serviceIds.mapNotNull(repository::service)
     val games = content.popularGameIds.mapNotNull(repository::game)
-    var search by remember { mutableStateOf("") }
+    val search = navigator.homeGameQuery
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(VenueColors.Slate950),
@@ -55,7 +51,7 @@ fun HomeScreen(repository: AppRepository, navigator: AppNavigator) {
                 Text(content.subtitle, color = VenueColors.Slate300)
                 OutlinedTextField(
                     value = search,
-                    onValueChange = { search = it },
+                    onValueChange = { navigator.homeGameQuery = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     label = { Text("جست‌وجوی بازی") },

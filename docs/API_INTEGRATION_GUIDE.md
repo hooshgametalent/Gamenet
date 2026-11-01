@@ -860,7 +860,8 @@ If-None-Match: W/"games-fc25-v7"
 - redirect به host خارج از allowlist رد می‌شود. schemeهای `file`، `content`، `javascript`، host محلی، loopback و IP خصوصی رد می‌شوند تا SSRF و دسترسی محلی ممکن نشود.
 - SVG فعال یا محتوای اجرایی پذیرفته نمی‌شود. MIME، magic bytes، ابعاد و حداکثر حجم 5 MiB بررسی می‌شود.
 - CDN باید محتوای upload شده را re-encode، metadata را حذف و نام فایل را مستقل از ورودی کاربر بسازد.
-- لینک رسمی بازی فقط HTTPS است، در مرورگر سیستم باز می‌شود و باید خروج از اپ برای کاربر روشن باشد.
+- لینک رسمی بازی فقط HTTPS است و اپ host را با allowlist ثابت build-time بررسی می‌کند. allowlist نسخه mock شامل `ea.com`، `tekken.com`، `mortalkombat.com`، `gran-turismo.com`، `playvalorant.com` و `my.gametalent.ir` و زیردامنه‌های آن‌هاست. افزودن میزبان جدید به بازبینی و انتشار اپ نیاز دارد؛ پاسخ API اجازه گسترش allowlist را ندارد.
+- لینک معتبر فقط پس از نمایش نام host و تأیید روشن خروج از اپ در مرورگر سیستم باز می‌شود. لینک دارای user-info، fragment، port غیر از 443، host مشابه یا scheme دیگر رد می‌شود. Intentهای تماس و نقشه مسیرهای typed جدا دارند و از policy لینک رسمی عبور نمی‌کنند.
 
 ### CORS
 
@@ -879,9 +880,10 @@ CORS مکانیزم مرورگر است و از API در برابر اپ native 
 
 1. serializer با رد type نامعتبر و تحمل فیلد ناشناخته اضافه شود.
 2. client HTTPS با timeout، cache، ETag، request ID، redacted logging و بدون body logging برای auth ساخته شود.
-3. `RemoteGameTalentRepository` همان interfaceهای `HomeRepository`، `GamesRepository`، `VenuesRepository`، `ServicesRepository` و `AuthRepository` را پیاده کند.
-4. DTO شبکه از مدل UI جدا و mapping آن unit test شود.
-5. INTERNET permission، منع cleartext، backup exclusion توکن و Keystore storage فقط هم‌زمان با فعال شدن remote اضافه شوند.
+3. رابط‌های همگام فعلی فقط برای `InMemoryMockRepository` هستند. پیش از شبکه، یک قرارداد ناهمگام جدید برای هر دامنه تعریف شود که stream یا تابع `suspend` برگرداند و نتیجه آن دست‌کم حالت‌های `loading`، `data`، `empty`، `stale` و `error` با `retryable` و `request_id` را نمایش دهد. فهرست‌های راه‌دور باید `items`، `next_cursor`، `has_more` و freshness را در مدل صفحه نگه دارند.
+4. صفحه‌ها در همان تغییر قرارداد به مصرف state ناهمگام، نمایش loading/error/retry، حفظ داده stale و درخواست cursor بعدی مهاجرت کنند. در نتیجه `RemoteGameTalentRepository` جایگزین drop-in رابط‌های فعلی نیست و rollout شبکه پیش از این تغییر هماهنگ UI و repository مجاز نیست.
+5. DTO شبکه از مدل UI جدا و mapping آن unit test شود.
+6. INTERNET permission، منع cleartext، backup exclusion توکن و Keystore storage فقط هم‌زمان با فعال شدن remote اضافه شوند.
 
 ### مرحله ۳: rollout خواندنی به تفکیک دامنه
 
