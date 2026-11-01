@@ -21,6 +21,8 @@ object VenueColors {
     val Red300 = Color(0xFFFCA5A5)
     val Red100 = Color(0xFFFEE2E2)
     val Cyan400 = Color(0xFF22D3EE)
+    val Amber400 = Color(0xFFFBBF24)
+    val Violet500 = Color(0xFF8B5CF6)
 }
 
 private val VenueColorScheme = darkColorScheme(
